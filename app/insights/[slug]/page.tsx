@@ -72,19 +72,17 @@ const componentsTest = {
 
 // Define the type for the component props
 interface BlogDetailPageProps {
-  params: {
-    slug: string;
-  };
+  slug: string;
+  data: any; // Define the structure of your data object
+  postsData: Post[];
 }
 
-const BlogDetailPage: React.FC<BlogDetailPageProps> = async ({ params }) => {
-  const { slug } = params;
-  const data = await getDetailPost(slug);
-  let postsData: Post[] = await getPosts();
-  postsData = postsData.filter((post) => post.slug?.current !== slug);
-
+const BlogDetailPage: React.FC<BlogDetailPageProps> = ({ slug, data, postsData }) => {
   const shareUrl = `https://nexus-labs.tech/insights/${slug}`;
   const shareTitle = data.title;
+
+  // Ensure date formatting is consistent
+  const formattedDate = format(new Date(data.publishedAt), "MMMM dd, yyyy");
 
   return (
     <div className="min-h-screen font-sans text-gray-100">
@@ -115,7 +113,7 @@ const BlogDetailPage: React.FC<BlogDetailPageProps> = async ({ params }) => {
             </span>
             <span className="flex items-center">
               <Clock className="mr-2 h-4 w-4" />
-              {format(new Date(data.publishedAt), "MMMM dd, yyyy")}
+              {formattedDate}
             </span>
           </div>
           <div className="flex mt-4">
@@ -136,7 +134,6 @@ const BlogDetailPage: React.FC<BlogDetailPageProps> = async ({ params }) => {
           <main className="lg:w-2/3">
             <article className="rounded-lg shadow-2xl p-8 mb-12 transform hover:scale-[1.01] transition-transform duration-300">
               <div className="prose prose-lg prose-invert max-w-none">
-                
                 <PortableText value={data.body} />
               </div>
             </article>
@@ -185,23 +182,19 @@ const BlogDetailPage: React.FC<BlogDetailPageProps> = async ({ params }) => {
   );
 };
 
+// Fetch the data server-side and pass it as props to the component
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const { slug } = params as { slug: string };
+  const data = await getDetailPost(slug);
+  const postsData = await getPosts();
+
+  return {
+    props: {
+      slug,
+      data,
+      postsData: postsData.filter((post) => post.slug?.current !== slug),
+    },
+  };
+};
+
 export default BlogDetailPage;
-
-
-
-
-//import React from 'react'
-
-// const page = () => {
-//   return (
-//     <div>
-      
-//     </div>
-//   )
-// }
-
-// export default page
-
-
-
-
