@@ -8,7 +8,6 @@ import Image from "next/image";
 import Link from "next/link";
 import ShareButtons from "./share-blog";
 import { ChevronLeft, Clock, User } from "lucide-react";
-import { GetServerSideProps } from 'next';
 
 const builder = imageUrlBuilder(client);
 
@@ -77,7 +76,19 @@ interface BlogDetailPageProps {
   postsData: Post[];
 }
 
-const BlogDetailPage: React.FC<BlogDetailPageProps> = ({ slug, data, postsData }) => {
+async function fetchData(slug: string) {
+  const data = await getDetailPost(slug);
+  const postsData = await getPosts();
+  return {
+    data,
+    postsData: postsData.filter((post) => post.slug?.current !== slug),
+  };
+}
+
+const BlogDetailPage: React.FC<BlogDetailPageProps> = async ({ params }) => {
+  const { slug } = params;
+  const { data, postsData } = await fetchData(slug);
+
   const shareUrl = `https://nexus-labs.tech/insights/${slug}`;
   const shareTitle = data.title;
 
@@ -180,21 +191,6 @@ const BlogDetailPage: React.FC<BlogDetailPageProps> = ({ slug, data, postsData }
       </div>
     </div>
   );
-};
-
-// Fetch the data server-side and pass it as props to the component
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-  const { slug } = params as { slug: string };
-  const data = await getDetailPost(slug);
-  const postsData = await getPosts();
-
-  return {
-    props: {
-      slug,
-      data,
-      postsData: postsData.filter((post) => post.slug?.current !== slug),
-    },
-  };
 };
 
 export default BlogDetailPage;
